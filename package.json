@@ -1,5 +1,5 @@
 {
-  "name": "stellaredupay",
+  "name": "paymentflow",
   "version": "1.0.0",
   "scripts": {
     "check:syntax": "node ./scripts/check-syntax.js",
