@@ -1,8 +1,8 @@
-# StellarEduPay
+# PaymentFlow
 
-A production-grade, multi-tenant school fee payment system built on the Stellar blockchain. StellarEduPay delivers transparent, immutable, and verifiable fee payments — eliminating manual reconciliation, reducing fraud, and providing instant proof of payment for schools and parents alike.
+A production-grade, multi-tenant school fee payment system built on the Stellar blockchain. PaymentFlow delivers transparent, immutable, and verifiable fee payments — eliminating manual reconciliation, reducing fraud, and providing instant proof of payment for schools and parents alike.
 
-[![CI](https://github.com/manuelusman73-png/StellarEduPay/actions/workflows/ci.yml/badge.svg)](https://github.com/manuelusman73-png/StellarEduPay/actions/workflows/ci.yml)
+[![CI](https://github.com/onlyonee1/PaymentFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/onlyonee1/PaymentFlow/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 
@@ -276,8 +276,8 @@ StellarEduPay is a three-tier application:
 #### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/StellarEduPay.git
-cd StellarEduPay
+git clone https://github.com/onlyonee1/PaymentFlow.git
+cd PaymentFlow
 ```
 
 #### Step 2: Generate a school wallet
@@ -814,7 +814,7 @@ export RETAIN_DAYS=7          # days of backups to keep
 ## Project Structure
 
 ```
-StellarEduPay/
+PaymentFlow/
 ├── backend/
 │   ├── migrations/            # Numbered database migration scripts
 │   ├── src/
