@@ -399,6 +399,8 @@ const en = {
     resultSuccess: "Success",
     resultFailure: "Failure",
     noLogsFound: "No audit logs found",
+    gridRowAnnouncement: "{{timestamp}}, action {{action}}, by {{actor}}, result {{result}}",
+    gridNavigationHint: "Use arrow keys to navigate rows. Press Enter or Space to view details.",
     event: {
       student_create: "Student Created",
       student_update: "Student Updated",
@@ -649,6 +651,8 @@ const en = {
     expandRow: "Expand row details",
     collapseRow: "Collapse row details",
     expandedDetails: "Details",
+    gridRowAnnouncement: "Student {{name}}, ID {{id}}, class {{cls}}, fee {{fee}} XLM, status {{status}}",
+    gridNavigationHint: "Use arrow keys to navigate rows. Press Enter or Space to expand or collapse.",
   },
   fees: {
     eyebrow: "Admin",
@@ -760,10 +764,18 @@ const en = {
 
   errorBoundary: {
     title: "Something went wrong",
-    body: "An unexpected error occurred. You can try reloading the page or go back to safety.",
+    body: "An unexpected error occurred. You can try again or go back to safety.",
     reload: "Reload page",
+    retry: "Try again",
     goBack: "Go back",
     goHome: "Go home",
+    correlationId: "Reference: {{id}}",
+  },
+
+  grid: {
+    rowAnnouncement: "Row {{index}} of {{total}}",
+    gridLabel: "Data grid",
+    navigationHint: "Use arrow keys to navigate rows. Press Enter or Space to activate a row.",
   },
 
   paymentPlan: {
