@@ -9,6 +9,7 @@ import RequireAdmin from "../components/RequireAdmin";
 import BlockchainStatusBadge from "../components/BlockchainStatusBadge";
 import { TableDensityControl, useTableDensity } from "../components/TableDensityControl";
 import { usePaymentEvents } from "../hooks/usePaymentEvents";
+import { useGridNavigation } from "../hooks/useGridNavigation";
 import { getSyncStatus, getPaymentSummary, getStudents, getStudent, getSchool } from "../services/api";
 import {
   IconUsers, IconCheck, IconAlertTriangle, IconDollarSign,
@@ -59,6 +60,29 @@ function Dashboard() {
   const { density, setDensity } = useTableDensity();
   // Set of student IDs whose detail row is currently expanded — Issue #113
   const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // ── Keyboard grid navigation — Issue #10 ────────────────────────────────
+  const { tbodyRef, liveAnnouncement, handleKeyDown, getRowProps } = useGridNavigation({
+    rowCount: students.length,
+    disabled: studentsLoading || students.length === 0,
+    onActivate: (index) => {
+      const s = students[index];
+      if (s) handleRowClick(s.studentId);
+    },
+    getAnnouncement: (index) => {
+      const s = students[index];
+      if (!s) return "";
+      const st = (s.status || "unpaid").toLowerCase();
+      const badge = STATUS_BADGE[st] || STATUS_BADGE.unpaid;
+      return t("dashboard.gridRowAnnouncement", {
+        name: s.name,
+        id: s.studentId,
+        cls: s.class,
+        fee: s.feeAmount,
+        status: badge.label,
+      });
+    },
+  });
 
   // Real-time SSE — surfaces degraded/reconnecting/failed state (Issues #1054, #1078).
   const { degraded, connectionStatus } = usePaymentEvents({
@@ -313,6 +337,22 @@ function Dashboard() {
         .row-expanded td {
           background: var(--accent-subtle);
         }
+
+        /* ── Grid keyboard navigation — Issue #10 ────────── */
+        .grid-container:focus {
+          outline: none;
+        }
+        tr[data-grid-row]:focus {
+          outline: 2px solid var(--accent, #059669);
+          outline-offset: -2px;
+        }
+        tr[data-grid-row]:focus td {
+          background: var(--accent-subtle, rgba(5,150,105,0.06));
+        }
+        tr[data-grid-row]:focus-visible {
+          outline: 2px solid var(--accent, #059669);
+          outline-offset: -2px;
+        }
         .row-detail td {
           padding: 0.75rem 1rem;
           background: var(--bg-subtle, var(--bg));
@@ -351,6 +391,10 @@ function Dashboard() {
           {summaryError || studentsError}
         </div>
       )}
+      {/* Grid navigation live region — Issue #10 */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" aria-label={t("dashboard.gridNavigationHint")}>
+        {liveAnnouncement}
+      </div>
 
       <div className="page-wrap dash-wrap">
 
@@ -503,37 +547,44 @@ function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div style={{ overflowX: "auto" }} aria-busy={studentsLoading} aria-label={t("dashboard.studentTableAria")}>
+              <div
+                className="grid-container"
+                style={{ overflowX: "auto" }}
+                aria-busy={studentsLoading}
+                aria-label={t("dashboard.studentTableAria")}
+              >
                 <table
+                  role="grid"
                   className="data-table"
                   data-density={density}
                   aria-label={studentsLoading ? t("dashboard.studentsLoadingAria") : t("dashboard.studentTableAria")}
+                  aria-rowcount={students.length + 1}
                 >
                   <thead>
-                    <tr>
-                      <th scope="col">{t("dashboard.colStudentId")}</th>
-                      <th scope="col">{t("dashboard.colName")}</th>
-                      <th scope="col" className="col-hide-sm">{t("dashboard.colClass")}</th>
-                      <th scope="col" className="col-hide-sm">{t("dashboard.colFee")}</th>
-                      <th scope="col" className="col-hide-xs">{t("dashboard.colStatus")}</th>
-                      <th scope="col"></th>
+                    <tr role="row" aria-rowindex={1}>
+                      <th scope="col" role="columnheader">{t("dashboard.colStudentId")}</th>
+                      <th scope="col" role="columnheader">{t("dashboard.colName")}</th>
+                      <th scope="col" className="col-hide-sm" role="columnheader">{t("dashboard.colClass")}</th>
+                      <th scope="col" className="col-hide-sm" role="columnheader">{t("dashboard.colFee")}</th>
+                      <th scope="col" className="col-hide-xs" role="columnheader">{t("dashboard.colStatus")}</th>
+                      <th scope="col" role="columnheader"></th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody ref={tbodyRef} onKeyDown={handleKeyDown}>
                     {studentsLoading ? (
                       Array.from({ length: 6 }).map((_, i) => (
-                        <tr key={i}>
-                          <td><div className="skel-block" style={{ height: 12, width: 72 }} /></td>
-                          <td><div className="skel-block" style={{ height: 12, width: 130 }} /></td>
-                          <td className="col-hide-sm"><div className="skel-block" style={{ height: 12, width: 44 }} /></td>
-                          <td className="col-hide-sm"><div className="skel-block" style={{ height: 12, width: 56 }} /></td>
-                          <td className="col-hide-xs"><div className="skel-block" style={{ height: 20, width: 52, borderRadius: 20 }} /></td>
-                          <td><div className="skel-block" style={{ height: 28, width: 42, borderRadius: 6 }} /></td>
+                        <tr key={i} role="row">
+                          <td role="gridcell"><div className="skel-block" style={{ height: 12, width: 72 }} /></td>
+                          <td role="gridcell"><div className="skel-block" style={{ height: 12, width: 130 }} /></td>
+                          <td className="col-hide-sm" role="gridcell"><div className="skel-block" style={{ height: 12, width: 44 }} /></td>
+                          <td className="col-hide-sm" role="gridcell"><div className="skel-block" style={{ height: 12, width: 56 }} /></td>
+                          <td className="col-hide-xs" role="gridcell"><div className="skel-block" style={{ height: 20, width: 52, borderRadius: 20 }} /></td>
+                          <td role="gridcell"><div className="skel-block" style={{ height: 28, width: 42, borderRadius: 6 }} /></td>
                         </tr>
                       ))
                     ) : students.length === 0 ? (
-                      <tr>
-                        <td colSpan="6">
+                      <tr role="row">
+                        <td colSpan="6" role="gridcell">
                           <div className="empty-state">
                             <div className="empty-state-icon"><IconSearch size={26} /></div>
                             <div className="empty-state-title">{t("dashboard.emptyTitle")}</div>
@@ -543,7 +594,7 @@ function Dashboard() {
                           </div>
                         </td>
                       </tr>
-                    ) : students.map(s => {
+                    ) : students.map((s, rowIdx) => {
                       const st = (s.status || "unpaid").toLowerCase();
                       const badge = STATUS_BADGE[st] || STATUS_BADGE.unpaid;
                       const isExpanded = expandedRows.has(s.studentId);
@@ -551,24 +602,29 @@ function Dashboard() {
                         <>
                           <tr
                             key={s.studentId}
+                            role="row"
                             className={`row-clickable${isExpanded ? " row-expanded" : ""}`}
                             onClick={() => handleRowClick(s.studentId)}
                             aria-expanded={isExpanded}
                             aria-label={isExpanded ? t("dashboard.collapseRow") : t("dashboard.expandRow")}
-                            tabIndex={0}
-                            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleRowClick(s.studentId); } }}
+                            {...getRowProps(rowIdx)}
+                            onKeyDown={e => {
+                              // Let the grid-level handler run first for arrow/home/end keys.
+                              handleKeyDown(e);
+                              // Row-specific activate handled by useGridNavigation's onActivate.
+                            }}
                           >
-                            <td className="col-mono">{s.studentId}</td>
-                            <td className="student-row-name">{s.name}</td>
-                            <td className="student-row-class col-hide-sm">{s.class}</td>
-                            <td className="student-row-fee col-hide-sm">
+                            <td className="col-mono" role="gridcell">{s.studentId}</td>
+                            <td className="student-row-name" role="gridcell">{s.name}</td>
+                            <td className="student-row-class col-hide-sm" role="gridcell">{s.class}</td>
+                            <td className="student-row-fee col-hide-sm" role="gridcell">
                               <span style={{ fontVariantNumeric: "tabular-nums" }}>{s.feeAmount}</span>
                               <span style={{ marginLeft: "0.25rem", fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>XLM</span>
                             </td>
-                            <td className="col-hide-xs">
+                            <td className="col-hide-xs" role="gridcell">
                               <span className={badge.cls}>{badge.label}</span>
                             </td>
-                            <td>
+                            <td role="gridcell">
                               <button
                                 onClick={e => { e.stopPropagation(); handleEditStudent(s); }}
                                 className="btn btn-sm btn-ghost"
@@ -578,8 +634,8 @@ function Dashboard() {
                             </td>
                           </tr>
                           {isExpanded && (
-                            <tr key={`${s.studentId}-detail`} className="row-detail">
-                              <td colSpan="6">
+                            <tr key={`${s.studentId}-detail`} className="row-detail" role="row">
+                              <td colSpan="6" role="gridcell">
                                 <div className="row-detail-grid" aria-label={t("dashboard.expandedDetails")}>
                                   <div className="row-detail-item">
                                     <span className="row-detail-label">{t("dashboard.colStudentId")}</span>

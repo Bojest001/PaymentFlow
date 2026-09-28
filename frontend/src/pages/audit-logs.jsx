@@ -7,6 +7,7 @@ import {
 import PageHero from "../components/PageHero";
 import RequireAdmin from "../components/RequireAdmin";
 import { useTranslation } from "react-i18next";
+import { useGridNavigation } from "../hooks/useGridNavigation";
 
 function formatTimestamp(isoString, t) {
   if (!isoString) return t("auditLogs.notAvailable");
@@ -67,6 +68,26 @@ function AuditLogsContent() {
     const t = setTimeout(() => setSearchFilter(searchInput.trim()), 350);
     return () => clearTimeout(t);
   }, [searchInput]);
+
+  // ── Keyboard grid navigation — Issue #10 ──────────────────────────────
+  const { tbodyRef, liveAnnouncement, handleKeyDown, getRowProps } = useGridNavigation({
+    rowCount: logs.length,
+    disabled: loading || logs.length === 0,
+    onActivate: (index) => {
+      const log = logs[index];
+      if (log) setExpandedId(expandedId === log._id ? null : log._id);
+    },
+    getAnnouncement: (index) => {
+      const log = logs[index];
+      if (!log) return "";
+      return t("auditLogs.gridRowAnnouncement", {
+        timestamp: formatTimestamp(log.createdAt, t),
+        action: getActionLabel(log.action, t),
+        actor: log.performedBy,
+        result: log.result === "success" ? t("auditLogs.resultSuccess") : t("auditLogs.resultFailure"),
+      });
+    },
+  });
 
   const fetchLogs = (cursor = null) => {
     const isLoadMore = cursor !== null && cursor !== undefined;
@@ -202,7 +223,25 @@ function AuditLogsContent() {
         .al-expand-btn:hover { background: var(--bg-subtle, var(--bg)); }
         .al-result-badge-success { background: var(--success-bg); color: var(--success-text); }
         .al-result-badge-failure { background: var(--danger-bg);  color: var(--danger-text);  }
+
+        /* ── Grid keyboard navigation — Issue #10 ────────── */
+        tr[data-grid-row]:focus {
+          outline: 2px solid var(--accent, #059669);
+          outline-offset: -2px;
+        }
+        tr[data-grid-row]:focus td {
+          background: var(--accent-subtle, rgba(5,150,105,0.06));
+        }
+        tr[data-grid-row]:focus-visible {
+          outline: 2px solid var(--accent, #059669);
+          outline-offset: -2px;
+        }
       `}</style>
+
+      {/* Grid navigation live region — Issue #10 */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {liveAnnouncement}
+      </div>
 
       <div className="page-wrap-wide">
         <PageHero
@@ -317,18 +356,22 @@ function AuditLogsContent() {
           {/* Table */}
           {loading ? (
             <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
+              <table role="grid" className="data-table">
                 <thead>
-                  <tr>
-                    <th>{t("auditLogs.colTimestamp")}</th><th>{t("auditLogs.colAction")}</th><th>{t("auditLogs.colPerformedBy")}</th>
-                    <th>{t("auditLogs.colTarget")}</th><th>{t("auditLogs.colResult")}</th><th>{t("auditLogs.colDetails")}</th>
+                  <tr role="row" aria-rowindex={1}>
+                    <th scope="col" role="columnheader">{t("auditLogs.colTimestamp")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colAction")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colPerformedBy")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colTarget")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colResult")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colDetails")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i}>
+                    <tr key={i} role="row">
                       {[100,140,80,120,60,40].map((w, j) => (
-                        <td key={j}><div className="skeleton" style={{ height: 12, width: w }} /></td>
+                        <td key={j} role="gridcell"><div className="skeleton" style={{ height: 12, width: w }} /></td>
                       ))}
                     </tr>
                   ))}
@@ -342,40 +385,45 @@ function AuditLogsContent() {
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
+              <table role="grid" className="data-table" aria-rowcount={logs.length + 1}>
                 <thead>
-                  <tr>
-                    <th scope="col">{t("auditLogs.colTimestamp")}</th>
-                    <th scope="col">{t("auditLogs.colAction")}</th>
-                    <th scope="col">{t("auditLogs.colPerformedBy")}</th>
-                    <th scope="col">{t("auditLogs.colTarget")}</th>
-                    <th scope="col">{t("auditLogs.colResult")}</th>
-                    <th scope="col">{t("auditLogs.colDetails")}</th>
+                  <tr role="row" aria-rowindex={1}>
+                    <th scope="col" role="columnheader">{t("auditLogs.colTimestamp")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colAction")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colPerformedBy")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colTarget")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colResult")}</th>
+                    <th scope="col" role="columnheader">{t("auditLogs.colDetails")}</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {logs.map((log) => {
+                <tbody ref={tbodyRef} onKeyDown={handleKeyDown}>
+                  {logs.map((log, rowIdx) => {
                     const isExpanded = expandedId === log._id;
                     return (
-                      <tr key={log._id}>
-                        <td style={{ whiteSpace: "nowrap", fontSize: "0.8125rem", color: "var(--text-muted)" }}>
+                      <tr
+                        key={log._id}
+                        role="row"
+                        {...getRowProps(rowIdx)}
+                        onKeyDown={handleKeyDown}
+                      >
+                        <td role="gridcell" style={{ whiteSpace: "nowrap", fontSize: "0.8125rem", color: "var(--text-muted)" }}>
                           {formatTimestamp(log.createdAt, t)}
                         </td>
-                        <td style={{ fontWeight: 500, fontSize: "0.875rem" }}>{getActionLabel(log.action, t)}</td>
-                        <td style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>{log.performedBy}</td>
-                        <td>
+                        <td role="gridcell" style={{ fontWeight: 500, fontSize: "0.875rem" }}>{getActionLabel(log.action, t)}</td>
+                        <td role="gridcell" style={{ fontSize: "0.8125rem", color: "var(--text-muted)" }}>{log.performedBy}</td>
+                        <td role="gridcell">
                           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "0.25rem" }}>
                             <span className="al-target-badge">{log.targetType}</span>
                             <span className="font-mono" style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>{log.targetId}</span>
                           </div>
                         </td>
-                        <td>
+                        <td role="gridcell">
                           <span className={`badge ${log.result === "success" ? "badge-success" : "badge-danger"}`}>
                             {log.result === "success" ? <IconCheck size={10} /> : <IconAlertTriangle size={10} />}
                             {log.result === "success" ? t("auditLogs.resultSuccess") : t("auditLogs.resultFailure")}
                           </span>
                         </td>
-                        <td>
+                        <td role="gridcell">
                           {log.errorMessage ? (
                             <span style={{ color: "var(--danger-text)", fontSize: "0.8125rem" }}>
                               {log.errorMessage}
@@ -439,5 +487,13 @@ function AuditLogsContent() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function AuditLogs() {
+  return (
+    <RequireAdmin>
+      <AuditLogsContent />
+    </RequireAdmin>
   );
 }
