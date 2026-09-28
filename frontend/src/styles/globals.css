@@ -1767,3 +1767,20 @@ html.dark textarea::placeholder { color: var(--text-subtle); }
             justify-content: center;
           }
         }
+
+/* ── Grid keyboard navigation — Issue #10 ──────────────────────────────────
+   Visible focus indicator for roving-tabindex rows in all data grids.
+   These rules apply globally so every page using [data-grid-row] gets
+   consistent keyboard-focus styling without needing inline <style> blocks.
+   ----------------------------------------------------------------------- */
+tr[data-grid-row]:focus {
+  outline: 2px solid var(--accent, #059669);
+  outline-offset: -2px;
+}
+tr[data-grid-row]:focus td {
+  background: var(--accent-subtle, rgba(5, 150, 105, 0.06));
+}
+tr[data-grid-row]:focus-visible {
+  outline: 2px solid var(--accent, #059669);
+  outline-offset: -2px;
+}

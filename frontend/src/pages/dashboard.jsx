@@ -547,19 +547,24 @@ function Dashboard() {
                 </div>
               </div>
             ) : (
-              <div
-                className="grid-container"
-                style={{ overflowX: "auto" }}
-                aria-busy={studentsLoading}
-                aria-label={t("dashboard.studentTableAria")}
-              >
-                <table
-                  role="grid"
-                  className="data-table"
-                  data-density={density}
-                  aria-label={studentsLoading ? t("dashboard.studentsLoadingAria") : t("dashboard.studentTableAria")}
-                  aria-rowcount={students.length + 1}
+              <>
+                {/* sr-only grid navigation hint — Issue #10 */}
+                <p className="sr-only" id="dashboard-grid-hint">
+                  {t("dashboard.gridNavigationHint")}
+                </p>
+                <div
+                  className="grid-container"
+                  style={{ overflowX: "auto" }}
+                  aria-busy={studentsLoading}
                 >
+                  <table
+                    role="grid"
+                    className="data-table"
+                    data-density={density}
+                    aria-label={studentsLoading ? t("dashboard.studentsLoadingAria") : t("dashboard.studentTableAria")}
+                    aria-rowcount={students.length + 1}
+                    aria-describedby="dashboard-grid-hint"
+                  >
                   <thead>
                     <tr role="row" aria-rowindex={1}>
                       <th scope="col" role="columnheader">{t("dashboard.colStudentId")}</th>
@@ -608,11 +613,6 @@ function Dashboard() {
                             aria-expanded={isExpanded}
                             aria-label={isExpanded ? t("dashboard.collapseRow") : t("dashboard.expandRow")}
                             {...getRowProps(rowIdx)}
-                            onKeyDown={e => {
-                              // Let the grid-level handler run first for arrow/home/end keys.
-                              handleKeyDown(e);
-                              // Row-specific activate handled by useGridNavigation's onActivate.
-                            }}
                           >
                             <td className="col-mono" role="gridcell">{s.studentId}</td>
                             <td className="student-row-name" role="gridcell">{s.name}</td>
@@ -681,6 +681,7 @@ function Dashboard() {
                   </tbody>
                 </table>
               </div>
+            </>
             )}
           </ErrorBoundary>
 

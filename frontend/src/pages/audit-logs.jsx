@@ -353,6 +353,11 @@ function AuditLogsContent() {
             </div>
           )}
 
+          {/* sr-only grid navigation hint — Issue #10 */}
+          <p className="sr-only" id="audit-grid-hint">
+            {t("auditLogs.gridNavigationHint")}
+          </p>
+
           {/* Table */}
           {loading ? (
             <div style={{ overflowX: "auto" }}>
@@ -385,7 +390,7 @@ function AuditLogsContent() {
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table role="grid" className="data-table" aria-rowcount={logs.length + 1}>
+              <table role="grid" className="data-table" aria-rowcount={logs.length + 1} aria-describedby="audit-grid-hint">
                 <thead>
                   <tr role="row" aria-rowindex={1}>
                     <th scope="col" role="columnheader">{t("auditLogs.colTimestamp")}</th>
@@ -404,7 +409,6 @@ function AuditLogsContent() {
                         key={log._id}
                         role="row"
                         {...getRowProps(rowIdx)}
-                        onKeyDown={handleKeyDown}
                       >
                         <td role="gridcell" style={{ whiteSpace: "nowrap", fontSize: "0.8125rem", color: "var(--text-muted)" }}>
                           {formatTimestamp(log.createdAt, t)}
