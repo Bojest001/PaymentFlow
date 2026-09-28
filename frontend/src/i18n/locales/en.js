@@ -764,6 +764,8 @@ const en = {
     reload: "Reload page",
     goBack: "Go back",
     goHome: "Go home",
+    retry: "Try again",
+    correlationId: "Reference: {{id}}",
   },
 
   paymentPlan: {
